@@ -42,7 +42,7 @@ let originalNicknames = {};
 const loginOptions = {
   appState,
   userAgent:
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 FBAV/400.0.0.0.0", // spoofed
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 FBAV/400.0.0.0.0",
 };
 
 login(loginOptions, (err, api) => {
@@ -125,7 +125,7 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // ✅ AUTO GC NAME REMOVER
+    // ✅ Auto-remove GC name when no lock active
     if (
       event.logMessageType === "log:thread-name" &&
       (!LOCKED_GROUP_NAME || threadID !== GROUP_THREAD_ID)
@@ -195,6 +195,8 @@ login(loginOptions, (err, api) => {
 
       try {
         await api.setTitle("", threadID);
+        LOCKED_GROUP_NAME = null;
+        GROUP_THREAD_ID = threadID;
         api.sendMessage("🧹 Group name hata diya gaya! 🔥", threadID);
       } catch (err) {
         api.sendMessage("❌ Naam remove nahi hua 😵", threadID);
