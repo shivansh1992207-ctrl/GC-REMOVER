@@ -38,6 +38,7 @@ let GROUP_THREAD_ID = null;
 let LOCKED_GROUP_NAME = null;
 let nickLockEnabled = false;
 let nickRemoveEnabled = false;
+let nickRemoveAllMode = false;
 let originalNicknames = {};
 
 const loginOptions = {
@@ -57,7 +58,6 @@ login(loginOptions, (err, api) => {
 
   log("🤖 BOT ONLINE 🔥 — Ready to lock and rock!");
 
-  // 💤 Anti-sleep
   setInterval(() => {
     if (GROUP_THREAD_ID) {
       api.sendTypingIndicator(GROUP_THREAD_ID, true);
@@ -66,7 +66,6 @@ login(loginOptions, (err, api) => {
     }
   }, 300000);
 
-  // 💾 Appstate backup
   setInterval(() => {
     try {
       const newAppState = api.getAppState();
@@ -77,7 +76,6 @@ login(loginOptions, (err, api) => {
     }
   }, 600000);
 
-  // 🎧 Event listener
   api.listenMqtt(async (err, event) => {
     if (err) return log("❌ Listen error: " + err);
 
@@ -113,21 +111,7 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // 🔘 /nickremove on
-    if (event.type === "message" && body === "/nickremove on") {
-      if (senderID !== BOSS_UID) return;
-      nickRemoveEnabled = true;
-      api.sendMessage("✅ Nickname auto-remove ON 🔥", threadID);
-    }
-
-    // 🔴 /nickremove off
-    if (event.type === "message" && body === "/nickremove off") {
-      if (senderID !== BOSS_UID) return;
-      nickRemoveEnabled = false;
-      api.sendMessage("❌ Nickname auto-remove OFF 💤", threadID);
-    }
-
-    // 🔁 Revert group name
+    // 🔁 GC Name Revert
     if (event.logMessageType === "log:thread-name" && threadID === GROUP_THREAD_ID) {
       const changedName = event.logMessageData.name;
       if (LOCKED_GROUP_NAME && changedName !== LOCKED_GROUP_NAME) {
@@ -140,97 +124,36 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // 🧹 Auto-remove GC name if not locked
-    if (
-      event.logMessageType === "log:thread-name" &&
-      (!LOCKED_GROUP_NAME || threadID !== GROUP_THREAD_ID)
-    ) {
-      try {
-        await api.setTitle("", threadID);
-        log(`🧹 GC name "${event.logMessageData.name}" auto-removed`);
-      } catch (err) {
-        log("❌ Auto-remove GC name failed: " + err);
-      }
-    }
-
-    // 🧷 /nicklock on
-    if (event.type === "message" && body.startsWith("/nicklock on")) {
-      if (senderID !== BOSS_UID)
-        return api.sendMessage("⛔ Sirf boss chala sakta hai 😎", threadID);
+    // 💣 /nickremoveall
+    if (event.type === "message" && body === "/nickremoveall") {
+      if (senderID !== BOSS_UID) return;
 
       try {
-        const nickToLock = event.body.slice(13).trim();
         const info = await api.getThreadInfo(threadID);
-        originalNicknames = {};
-        nickLockEnabled = true;
-
         for (const u of info.userInfo) {
-          originalNicknames[u.id] = nickToLock || u.nickname || "";
-          if (nickToLock) {
-            await api.changeNickname(nickToLock, threadID, u.id);
-          }
+          await api.changeNickname("", threadID, u.id);
         }
-
-        api.sendMessage(`🔐 Nickname lock on! "${nickToLock}" set ✅`, threadID);
+        nickRemoveAllMode = true;
+        api.sendMessage("💥 Sabke nicknames hata diye gaye! 🔒 Auto remove active ✅", threadID);
+        log("🔥 All nicknames removed, nickRemoveAllMode = true");
       } catch (err) {
-        api.sendMessage("❌ Nickname lock fail 😵", threadID);
+        api.sendMessage("❌ Nickname remove fail 😵", threadID);
+        log("❌ [NICKREMOVEALL ERROR]: " + err);
       }
     }
 
-    // 🔓 /nicklock off
-    if (event.type === "message" && body === "/nicklock off") {
-      if (senderID !== BOSS_UID)
-        return api.sendMessage("⛔ Only boss allowed 😤", threadID);
-
-      nickLockEnabled = false;
-      originalNicknames = {};
-      api.sendMessage("🔓 Nickname lock removed ✅", threadID);
-    }
-
-    // ↩️ Revert nicknames if locked
-    if (nickLockEnabled && event.logMessageType === "log:user-nickname") {
-      const changedUID = event.logMessageData.participant_id;
-      const newNick = event.logMessageData.nickname;
-      const originalNick = originalNicknames[changedUID];
-
-      if (originalNick !== undefined && newNick !== originalNick) {
-        try {
-          await api.changeNickname(originalNick, threadID, changedUID);
-          log(`↩️ Nickname reverted: ${newNick} → ${originalNick}`);
-        } catch (err) {
-          log("❌ Nick revert fail: " + err);
-        }
-      }
-    }
-
-    // 🚫 Auto-remove nickname (if enabled)
-    if (nickRemoveEnabled && event.logMessageType === "log:user-nickname") {
+    // 🚫 Block future nickname changes if nickRemoveAllMode is ON
+    if (nickRemoveAllMode && event.logMessageType === "log:user-nickname") {
       const changedUID = event.logMessageData.participant_id;
       const currentNick = event.logMessageData.nickname;
 
       if (currentNick && currentNick.trim() !== "") {
         try {
           await api.changeNickname("", threadID, changedUID);
-          log(`🚫 Nickname auto-removed: ${changedUID} → ""`);
+          log(`🚫 [Auto-Block] Removed nickname of ${changedUID}: "${currentNick}"`);
         } catch (err) {
-          log("❌ Nickname auto-remove failed: " + err);
+          log("❌ [Auto-Block Nick Remove Failed]: " + err);
         }
-      }
-    }
-
-    // 🧹 /gcremove
-    if (event.type === "message" && body === "/gcremove") {
-      if (senderID !== BOSS_UID)
-        return api.sendMessage("⛔ Sirf boss chala sakta hai 😎", threadID);
-
-      try {
-        await api.setTitle("", threadID);
-        LOCKED_GROUP_NAME = null;
-        GROUP_THREAD_ID = threadID;
-        api.sendMessage("🧹 Group name hata diya gaya! 🔥", threadID);
-      } catch (err) {
-        api.sendMessage("❌ Naam remove nahi hua 😵", threadID);
-        log("❌ [GCREMOVE ERROR]: " + err);
       }
     }
   });
