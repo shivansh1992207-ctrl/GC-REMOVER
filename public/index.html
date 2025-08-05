@@ -1,65 +1,85 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AROHI X ANURAG BOT PANEL</title>
+  <title>AROHI X ANURAG PANEL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      background: #0a0a0a;
-      color: #fff;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to top, #0f0f0f, #1a1a1a);
       font-family: 'Segoe UI', sans-serif;
+      color: #fff;
       text-align: center;
-      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .anime-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('https://i.pinimg.com/originals/94/e7/bb/94e7bbf92cf94394f9fe0cb886d6920a.gif') center/cover no-repeat;
+      filter: brightness(0.25) blur(4px);
+      z-index: -1;
+    }
+
+    .container {
+      margin-top: 5vh;
+      background: rgba(0,0,0,0.6);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 600px;
+      margin-inline: auto;
+      box-shadow: 0 0 25px #f0f;
     }
 
     h1 {
-      color: #f0f;
-      text-shadow: 0 0 10px #f0f;
+      font-size: 32px;
+      color: #ff66cc;
+      text-shadow: 0 0 12px #f0f;
     }
 
-    .panel {
-      background: #111;
-      padding: 25px;
-      border-radius: 12px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 15px #f0f;
-    }
-
-    textarea, input {
+    input, textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin: 10px 0;
-      background: #222;
+      background: #111;
       color: #0f0;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-family: monospace;
     }
 
     button {
-      padding: 12px 20px;
+      padding: 12px 25px;
       margin: 10px 5px;
       font-weight: bold;
-      border-radius: 8px;
+      border-radius: 10px;
       border: none;
       cursor: pointer;
-      font-size: 15px;
+      font-size: 16px;
+      transition: all 0.3s;
     }
 
     .start-btn {
-      background: #0f0;
+      background: #00ff88;
       color: #000;
     }
 
     .stop-btn {
-      background: #f00;
+      background: #ff0055;
       color: #fff;
     }
 
+    button:hover {
+      opacity: 0.8;
+    }
+
     .log-box {
-      background: #111;
+      background: #000000cc;
       border: 1px solid #444;
       margin-top: 20px;
       padding: 15px;
@@ -68,16 +88,18 @@
       text-align: left;
       white-space: pre-wrap;
       font-size: 14px;
-      color: #ccc;
-      border-radius: 8px;
-      box-shadow: inset 0 0 8px #f0f;
+      color: #f0f0f0;
+      border-radius: 10px;
+      box-shadow: inset 0 0 10px #ff00ff;
     }
   </style>
 </head>
 <body>
-  <h1>🚀 AROHI X ANURAG BOT PANEL</h1>
+  <div class="anime-bg"></div>
 
-  <div class="panel">
+  <div class="container">
+    <h1>🌸 AROHI X ANURAG BOT PANEL 🌸</h1>
+
     <input id="uid" placeholder="👑 Paste your Admin UID..." />
     <textarea id="appstate" placeholder="📋 Paste your AppState JSON here..."></textarea>
 
