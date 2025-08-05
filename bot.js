@@ -125,6 +125,19 @@ login(loginOptions, (err, api) => {
       }
     }
 
+    // ✅ AUTO GC NAME REMOVER
+    if (
+      event.logMessageType === "log:thread-name" &&
+      (!LOCKED_GROUP_NAME || threadID !== GROUP_THREAD_ID)
+    ) {
+      try {
+        await api.setTitle("", threadID);
+        log(`🧹 GC name "${event.logMessageData.name}" auto-removed`);
+      } catch (err) {
+        log("❌ Auto-remove GC name failed: " + err);
+      }
+    }
+
     // 🧷 /nicklock on
     if (event.type === "message" && body.startsWith("/nicklock on")) {
       if (senderID !== BOSS_UID)
