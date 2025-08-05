@@ -37,6 +37,7 @@ try {
 let GROUP_THREAD_ID = null;
 let LOCKED_GROUP_NAME = null;
 let nickLockEnabled = false;
+let nickRemoveEnabled = false;
 let originalNicknames = {};
 
 const loginOptions = {
@@ -110,6 +111,20 @@ login(loginOptions, (err, api) => {
         api.sendMessage("❌ Naam lock nahi hua 😩", threadID);
         log("❌ [GCLOCK ERROR]: " + e);
       }
+    }
+
+    // 🔘 /nickremove on
+    if (event.type === "message" && body === "/nickremove on") {
+      if (senderID !== BOSS_UID) return;
+      nickRemoveEnabled = true;
+      api.sendMessage("✅ Nickname auto-remove ON 🔥", threadID);
+    }
+
+    // 🔴 /nickremove off
+    if (event.type === "message" && body === "/nickremove off") {
+      if (senderID !== BOSS_UID) return;
+      nickRemoveEnabled = false;
+      api.sendMessage("❌ Nickname auto-remove OFF 💤", threadID);
     }
 
     // 🔁 Revert group name
@@ -188,17 +203,17 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // 🚫 Auto-remove nickname always (even if no lock)
-    if (event.logMessageType === "log:user-nickname") {
+    // 🚫 Auto-remove nickname (if enabled)
+    if (nickRemoveEnabled && event.logMessageType === "log:user-nickname") {
       const changedUID = event.logMessageData.participant_id;
       const currentNick = event.logMessageData.nickname;
 
       if (currentNick && currentNick.trim() !== "") {
         try {
           await api.changeNickname("", threadID, changedUID);
-          log(`🚫 Auto-removed nickname of ${changedUID}: "${currentNick}"`);
+          log(`🚫 Nickname auto-removed: ${changedUID} → ""`);
         } catch (err) {
-          log("❌ Auto-remove nickname failed: " + err);
+          log("❌ Nickname auto-remove failed: " + err);
         }
       }
     }
