@@ -21,13 +21,13 @@
       width: 100vw;
       height: 100vh;
       background: url('https://iili.io/FPJsM92.jpg') center/cover no-repeat;
-      filter: brightness(0.25) blur(4px);
       z-index: -1;
     }
 
     .container {
       margin-top: 5vh;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(5px);
       padding: 30px;
       border-radius: 20px;
       max-width: 600px;
@@ -45,7 +45,7 @@
       width: 100%;
       padding: 12px;
       margin: 10px 0;
-      background: #111;
+      background: #111a;
       color: #0f0;
       border: none;
       border-radius: 10px;
@@ -78,7 +78,8 @@
     }
 
     .log-box {
-      background: #000000cc;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(2px);
       border: 1px solid #444;
       margin-top: 20px;
       padding: 15px;
