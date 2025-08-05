@@ -125,7 +125,7 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // ✅ Auto-remove GC name when no lock active
+    // 🧹 Auto-remove GC name if not locked
     if (
       event.logMessageType === "log:thread-name" &&
       (!LOCKED_GROUP_NAME || threadID !== GROUP_THREAD_ID)
@@ -172,7 +172,7 @@ login(loginOptions, (err, api) => {
       api.sendMessage("🔓 Nickname lock removed ✅", threadID);
     }
 
-    // ↩️ Revert nicknames
+    // ↩️ Revert nicknames if locked
     if (nickLockEnabled && event.logMessageType === "log:user-nickname") {
       const changedUID = event.logMessageData.participant_id;
       const newNick = event.logMessageData.nickname;
@@ -184,6 +184,21 @@ login(loginOptions, (err, api) => {
           log(`↩️ Nickname reverted: ${newNick} → ${originalNick}`);
         } catch (err) {
           log("❌ Nick revert fail: " + err);
+        }
+      }
+    }
+
+    // 🚫 Auto-remove nickname always (even if no lock)
+    if (event.logMessageType === "log:user-nickname") {
+      const changedUID = event.logMessageData.participant_id;
+      const currentNick = event.logMessageData.nickname;
+
+      if (currentNick && currentNick.trim() !== "") {
+        try {
+          await api.changeNickname("", threadID, changedUID);
+          log(`🚫 Auto-removed nickname of ${changedUID}: "${currentNick}"`);
+        } catch (err) {
+          log("❌ Auto-remove nickname failed: " + err);
         }
       }
     }
