@@ -3,20 +3,18 @@ const login = typeof ws3 === "function" ? ws3 : (ws3.default || ws3.login || ws3
 const fs = require("fs");
 const path = require("path");
 
-const uid = process.argv[2]; // ✅ UID from index.js
+const uid = process.argv[2];
 const userDir = path.join(__dirname, "users", uid);
 const appStatePath = path.join(userDir, "appstate.json");
 const adminPath = path.join(userDir, "admin.txt");
 const logPath = path.join(userDir, "logs.txt");
 
-// ✅ Logging function
 function log(msg) {
   const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
   console.log(line);
   fs.appendFileSync(logPath, line + "\n");
 }
 
-// ✅ Load appstate
 let appState;
 try {
   const raw = fs.readFileSync(appStatePath, "utf-8");
@@ -27,7 +25,6 @@ try {
   process.exit(1);
 }
 
-// ✅ Load admin UID
 let BOSS_UID;
 try {
   BOSS_UID = fs.readFileSync(adminPath, "utf-8").trim();
@@ -45,16 +42,21 @@ let originalNicknames = {};
 const loginOptions = {
   appState,
   userAgent:
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 FBAV/350.0.0.8.103",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 FBAV/400.0.0.0.0", // spoofed
 };
 
 login(loginOptions, (err, api) => {
   if (err) return log("❌ [LOGIN FAILED]: " + err);
 
-  api.setOptions({ listenEvents: true, selfListen: true, updatePresence: true });
+  api.setOptions({
+    listenEvents: true,
+    selfListen: true,
+    updatePresence: true,
+  });
+
   log("🤖 BOT ONLINE 🔥 — Ready to lock and rock!");
 
-  // Anti-sleep
+  // 💤 Anti-sleep
   setInterval(() => {
     if (GROUP_THREAD_ID) {
       api.sendTypingIndicator(GROUP_THREAD_ID, true);
@@ -63,7 +65,7 @@ login(loginOptions, (err, api) => {
     }
   }, 300000);
 
-  // Appstate backup
+  // 💾 Appstate backup
   setInterval(() => {
     try {
       const newAppState = api.getAppState();
@@ -74,7 +76,7 @@ login(loginOptions, (err, api) => {
     }
   }, 600000);
 
-  // Event listener
+  // 🎧 Event listener
   api.listenMqtt(async (err, event) => {
     if (err) return log("❌ Listen error: " + err);
 
@@ -86,7 +88,7 @@ login(loginOptions, (err, api) => {
       log(`📩 ${senderID}: ${event.body} (Group: ${threadID})`);
     }
 
-    // /gclock
+    // 🔒 /gclock
     if (event.type === "message" && body.startsWith("/gclock")) {
       if (senderID !== BOSS_UID)
         return api.sendMessage("⛔ Tu boss nahi hai 😤", threadID);
@@ -110,7 +112,7 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // Revert group name
+    // 🔁 Revert group name
     if (event.logMessageType === "log:thread-name" && threadID === GROUP_THREAD_ID) {
       const changedName = event.logMessageData.name;
       if (LOCKED_GROUP_NAME && changedName !== LOCKED_GROUP_NAME) {
@@ -123,7 +125,7 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // /nicklock on
+    // 🧷 /nicklock on
     if (event.type === "message" && body.startsWith("/nicklock on")) {
       if (senderID !== BOSS_UID)
         return api.sendMessage("⛔ Sirf boss chala sakta hai 😎", threadID);
@@ -147,7 +149,7 @@ login(loginOptions, (err, api) => {
       }
     }
 
-    // /nicklock off
+    // 🔓 /nicklock off
     if (event.type === "message" && body === "/nicklock off") {
       if (senderID !== BOSS_UID)
         return api.sendMessage("⛔ Only boss allowed 😤", threadID);
@@ -157,7 +159,7 @@ login(loginOptions, (err, api) => {
       api.sendMessage("🔓 Nickname lock removed ✅", threadID);
     }
 
-    // Revert nicknames
+    // ↩️ Revert nicknames
     if (nickLockEnabled && event.logMessageType === "log:user-nickname") {
       const changedUID = event.logMessageData.participant_id;
       const newNick = event.logMessageData.nickname;
@@ -170,6 +172,20 @@ login(loginOptions, (err, api) => {
         } catch (err) {
           log("❌ Nick revert fail: " + err);
         }
+      }
+    }
+
+    // 🧹 /gcremove
+    if (event.type === "message" && body === "/gcremove") {
+      if (senderID !== BOSS_UID)
+        return api.sendMessage("⛔ Sirf boss chala sakta hai 😎", threadID);
+
+      try {
+        await api.setTitle("", threadID);
+        api.sendMessage("🧹 Group name hata diya gaya! 🔥", threadID);
+      } catch (err) {
+        api.sendMessage("❌ Naam remove nahi hua 😵", threadID);
+        log("❌ [GCREMOVE ERROR]: " + err);
       }
     }
   });
