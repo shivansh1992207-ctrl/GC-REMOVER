@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AROHI X ANURAG PANEL</title>
+  <title>ANURAG X AROHI BOT PANEL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * {
@@ -12,108 +12,72 @@
     body {
       margin: 0;
       padding: 0;
-      background: #000;
+      background: url('https://iili.io/FPJsM92.jpg') center/cover no-repeat fixed;
       font-family: 'Segoe UI', sans-serif;
       color: #fff;
       text-align: center;
-      overflow-x: hidden;
-    }
-
-    .anime-bg {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: url('https://iili.io/FPJsM92.jpg') center center / cover no-repeat;
-      z-index: -2;
-    }
-
-    .overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(4px);
-      z-index: -1;
     }
 
     .container {
-      margin-top: 6vh;
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(20px);
+      margin-top: 5vh;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(5px);
       padding: 30px;
       border-radius: 20px;
       max-width: 600px;
       margin-inline: auto;
-      box-shadow: 0 0 50px rgba(255, 0, 255, 0.5);
-      animation: fadeIn 1.5s ease;
-    }
-
-    @keyframes fadeIn {
-      0% {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      100% {
-        transform: translateY(0px);
-        opacity: 1;
-      }
+      box-shadow: 0 0 25px #ff00ff99;
     }
 
     h1 {
-      font-size: 34px;
-      color: #ff66cc;
-      text-shadow: 0 0 15px #f0f;
-      margin-bottom: 25px;
+      font-size: 30px;
+      color: #ff99ff;
+      text-shadow: 0 0 15px #00ffee;
     }
 
     input, textarea {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       margin: 10px 0;
-      background: rgba(255,255,255,0.08);
-      color: #0f0;
-      border: 1px solid #0f08;
+      background: rgba(0, 0, 0, 0.5);
+      color: #00ff99;
+      border: none;
       border-radius: 10px;
       font-family: monospace;
-      font-size: 15px;
-      outline: none;
-      box-shadow: inset 0 0 10px #000;
+      font-size: 14px;
     }
 
     button {
       padding: 12px 25px;
-      margin: 12px 8px;
-      font-weight: bold;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
+      margin: 10px 5px;
+      border-radius: 10px;
       font-size: 16px;
-      transition: transform 0.2s, box-shadow 0.3s;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 15px #fff2;
+      transition: 0.3s ease;
     }
 
     .start-btn {
-      background: linear-gradient(to right, #00ff99, #00ccff);
+      background: linear-gradient(to right, #00ff99, #00ffff);
       color: #000;
-      box-shadow: 0 0 10px #00ffcc;
     }
 
     .stop-btn {
-      background: linear-gradient(to right, #ff0066, #ff3300);
+      background: linear-gradient(to right, #ff0066, #ff33cc);
       color: #fff;
-      box-shadow: 0 0 10px #ff0055;
     }
 
-    button:hover {
+    .start-btn:hover, .stop-btn:hover {
       transform: scale(1.05);
-      box-shadow: 0 0 20px #fff;
+      box-shadow: 0 0 20px #fff5;
     }
 
     .log-box {
       background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(4px);
-      border: 1px solid #666;
+      backdrop-filter: blur(3px);
+      border: 1px solid #444;
       margin-top: 20px;
       padding: 15px;
       height: 300px;
@@ -126,17 +90,24 @@
       box-shadow: inset 0 0 10px #ff00ff;
     }
 
-    ::placeholder {
-      color: #aaa;
+    .status {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .online {
+      color: #00ff00;
+    }
+
+    .offline {
+      color: #ff0000;
     }
   </style>
 </head>
 <body>
-  <div class="anime-bg"></div>
-  <div class="overlay"></div>
-
   <div class="container">
-    <h1>🌸 BOT PANEL 🌸</h1>
+    <h1>🌸 ANURAG X AROHI BOT PANEL 🌸</h1>
 
     <input id="uid" placeholder="👑 Paste your Admin UID..." />
     <textarea id="appstate" placeholder="📋 Paste your AppState JSON here..."></textarea>
@@ -144,6 +115,7 @@
     <button class="start-btn" onclick="startBot()">🟢 Start Bot</button>
     <button class="stop-btn" onclick="stopBot()">🔴 Stop Bot</button>
 
+    <div class="status" id="botStatus">⏳ BOT STATUS: <span class="offline">OFFLINE</span></div>
     <div class="log-box" id="logs">📜 Waiting for logs...</div>
   </div>
 
@@ -171,8 +143,18 @@
     setInterval(() => {
       const uid = document.getElementById("uid").value.trim();
       if (!uid) return;
+
       fetch(`/logs?uid=${uid}`).then(res => res.text()).then(log => {
         document.getElementById("logs").innerText = log;
+        const online = log.includes("🤖 BOT ONLINE");
+        const statusSpan = document.querySelector("#botStatus span");
+        if (online) {
+          statusSpan.className = "online";
+          statusSpan.innerText = "ONLINE";
+        } else {
+          statusSpan.className = "offline";
+          statusSpan.innerText = "OFFLINE";
+        }
       });
     }, 3000);
   </script>
